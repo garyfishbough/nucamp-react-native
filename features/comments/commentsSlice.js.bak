@@ -10,8 +10,7 @@ export const postComment = createAsyncThunk("comments/postComment", async (paylo
      {
         setTimeout(() => {
             const { comments } = getState()
-			const d = new Date()
-            payload.date = d.toISOString()
+            payload.date = payload.date.toISOString()
             payload.id = comments.commentsArray.length
             dispatch(addComment(payload))
         }, 2000)

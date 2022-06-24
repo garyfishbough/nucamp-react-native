@@ -3,6 +3,7 @@ import { Rating, Input } from "react-native-elements"
 import { FlatList, StyleSheet, Text, View, Button, Modal } from "react-native"
 import { useSelector, useDispatch } from "react-redux"
 import RenderCampsite from "../features/campsites/RenderCampsite"
+import { postComment } from "../features/comments/commentsSlice"
 import { toggleFavorite } from "../features/favorites/favoritesSlice"
 import Icon from "react-native-vector-icons/FontAwesome"
 
@@ -23,7 +24,7 @@ const CampsiteInfoScreen = ({ route }) => {
             text,
             campsiteId: campsite.id,
         }
-        console.log(newComment)
+        dispatch(postComment(newComment))
         setShowModal(!showModal)
     }
 
@@ -90,7 +91,7 @@ const CampsiteInfoScreen = ({ route }) => {
                         placeholder='Author'
                         leftIcon={{ type: "font-awesome", name: "user-o" }}
                         leftIconContainerStyle={{ paddingRight: 10 }}
-                        onChangeText={(author) => setText(author)}
+                        onChangeText={(author) => setAuthor(author)}
                         value={author}
                     />
                     <Input
