@@ -1,37 +1,39 @@
-import { Image, Platform, StyleSheet, Text, View } from "react-native"
-import Constants from "expo-constants"
-import CampsiteInfoScreen from "./CampsiteInfoScreen"
-import DirectoryScreen from "./DirectoryScreen"
-import { createStackNavigator } from "@react-navigation/stack"
+import { Image, Platform, StyleSheet, Text, View, Alert, ToastAndroid } from "react-native";
+import Constants from "expo-constants";
+import CampsiteInfoScreen from "./CampsiteInfoScreen";
+import DirectoryScreen from "./DirectoryScreen";
+import { createStackNavigator } from "@react-navigation/stack";
 import {
     createDrawerNavigator,
     DrawerContentScrollView,
     DrawerItemList,
-} from "@react-navigation/drawer"
-import HomeScreen from "./HomeScreen"
-import AboutScreen from "./AboutScreen"
-import ContactScreen from "./ContactScreen"
-import ReservationScreen from "./ReservationScreen"
-import { Icon } from "react-native-elements"
-import logo from "../assets/images/logo.png"
-import { useDispatch } from "react-redux"
-import { useEffect } from "react"
-import { fetchPartners } from "../features/partners/partnersSlice"
-import { fetchCampsites } from "../features/campsites/campsitesSlice"
-import { fetchPromotions } from "../features/promotions/promotionsSlice"
-import { fetchComments } from "../features/comments/commentsSlice"
-import FavoritesScreen from "./FavoritesScreen"
-import LoginScreen from "./LoginScreen"
+} from "@react-navigation/drawer";
+import HomeScreen from "./HomeScreen";
+import AboutScreen from "./AboutScreen";
+import ContactScreen from "./ContactScreen";
+import ReservationScreen from "./ReservationScreen";
+import { Icon } from "react-native-elements";
+import logo from "../assets/images/logo.png";
+import { useDispatch } from "react-redux";
+import { useEffect } from "react";
+import { fetchPartners } from "../features/partners/partnersSlice";
+import { fetchCampsites } from "../features/campsites/campsitesSlice";
+import { fetchPromotions } from "../features/promotions/promotionsSlice";
+import { fetchComments } from "../features/comments/commentsSlice";
+import FavoritesScreen from "./FavoritesScreen";
+import LoginScreen from "./LoginScreen";
+import { getFocusedRouteNameFromRoute } from "@react-navigation/core";
+import NetInfo from "@react-native-community/netinfo";
 
-const Drawer = createDrawerNavigator()
+const Drawer = createDrawerNavigator();
 
 const screenOptions = {
     headerTintColor: "#fff",
     headerStyle: { backgroundColor: "#5637DD" },
-}
+};
 
 const HomeNavigator = () => {
-    const Stack = createStackNavigator()
+    const Stack = createStackNavigator();
     return (
         <Stack.Navigator screenOptions={screenOptions}>
             <Stack.Screen
@@ -50,11 +52,11 @@ const HomeNavigator = () => {
                 })}
             />
         </Stack.Navigator>
-    )
-}
+    );
+};
 
 const AboutNavigator = () => {
-    const Stack = createStackNavigator()
+    const Stack = createStackNavigator();
     return (
         <Stack.Navigator screenOptions={screenOptions}>
             <Stack.Screen
@@ -72,11 +74,11 @@ const AboutNavigator = () => {
                 })}
             />
         </Stack.Navigator>
-    )
-}
+    );
+};
 
 const ContactNavigator = () => {
-    const Stack = createStackNavigator()
+    const Stack = createStackNavigator();
     return (
         <Stack.Navigator screenOptions={screenOptions}>
             <Stack.Screen
@@ -95,11 +97,11 @@ const ContactNavigator = () => {
                 })}
             />
         </Stack.Navigator>
-    )
-}
+    );
+};
 
 const ReservationNavigator = () => {
-    const Stack = createStackNavigator()
+    const Stack = createStackNavigator();
     return (
         <Stack.Navigator screenOptions={screenOptions}>
             <Stack.Screen
@@ -118,10 +120,11 @@ const ReservationNavigator = () => {
                 })}
             />
         </Stack.Navigator>
-    )
-}
+    );
+};
+
 const FavoritesNavigator = () => {
-    const Stack = createStackNavigator()
+    const Stack = createStackNavigator();
     return (
         <Stack.Navigator screenOptions={screenOptions}>
             <Stack.Screen
@@ -140,19 +143,25 @@ const FavoritesNavigator = () => {
                 })}
             />
         </Stack.Navigator>
-    )
-}
+    );
+};
+
 const LoginNavigator = () => {
-    const Stack = createStackNavigator()
+    const Stack = createStackNavigator();
     return (
         <Stack.Navigator screenOptions={screenOptions}>
             <Stack.Screen
                 name='Login'
                 component={LoginScreen}
-                options={({ navigation }) => ({
+                options={({ navigation, route }) => ({
+                    headerTitle: getFocusedRouteNameFromRoute(route),
                     headerLeft: () => (
                         <Icon
-                            name='sign-in'
+                            name={
+                                getFocusedRouteNameFromRoute(route) === "Register"
+                                    ? "user-plus"
+                                    : "sign-in"
+                            }
                             type='font-awesome'
                             iconStyle={styles.stackIcon}
                             onPress={() => navigation.toggleDrawer()}
@@ -161,11 +170,11 @@ const LoginNavigator = () => {
                 })}
             />
         </Stack.Navigator>
-    )
-}
+    );
+};
 
 const DirectoryNavigator = () => {
-    const Stack = createStackNavigator()
+    const Stack = createStackNavigator();
     return (
         <Stack.Navigator initialRouteName='Directory' screenOptions={screenOptions}>
             <Stack.Screen
@@ -191,8 +200,8 @@ const DirectoryNavigator = () => {
                 })}
             />
         </Stack.Navigator>
-    )
-}
+    );
+};
 
 const CustomDrawerContent = (props) => (
     <DrawerContentScrollView {...props}>
@@ -206,17 +215,55 @@ const CustomDrawerContent = (props) => (
         </View>
         <DrawerItemList {...props} labelStyle={{ fontWeight: "bold" }} />
     </DrawerContentScrollView>
-)
+);
 
 const Main = () => {
-    const dispatch = useDispatch()
+    const dispatch = useDispatch();
 
     useEffect(() => {
-        dispatch(fetchCampsites())
-        dispatch(fetchPromotions())
-        dispatch(fetchPartners())
-        dispatch(fetchComments())
-    }, [dispatch])
+        dispatch(fetchCampsites());
+        dispatch(fetchPromotions());
+        dispatch(fetchPartners());
+        dispatch(fetchComments());
+    }, [dispatch]);
+
+    useEffect(() => {
+        NetInfo.fetch().then((connectionInfo) => {
+            Platform.OS === "ios"
+                ? Alert.alert("Initial Network Connectivity Type:", connectionInfo.type)
+                : ToastAndroid.show(
+                      "Initial Network Connectivity Type: " + connectionInfo.type,
+                      ToastAndroid.LONG
+                  );
+        });
+
+        const unsubscribeNetInfo = NetInfo.addEventListener((connectionInfo) => {
+            handleConnectivityChange(connectionInfo);
+        });
+
+        return unsubscribeNetInfo;
+    }, []);
+
+    const handleConnectivityChange = (connectionInfo) => {
+        let connectionMsg = "You are now connected to an active network.";
+        switch (connectionInfo.type) {
+            case "none":
+                connectionMsg = "No network connection is active.";
+                break;
+            case "unknown":
+                connectionMsg = "The network connection state is now unknown.";
+                break;
+            case "cellular":
+                connectionMsg = "You are now connected to a cellular network.";
+                break;
+            case "wifi":
+                connectionMsg = "You are now connected to a WiFi network.";
+                break;
+        }
+        Platform.OS === "ios"
+            ? Alert.alert("Connection change:", connectionMsg)
+            : ToastAndroid.show(connectionMsg, ToastAndroid.LONG);
+    };
 
     return (
         <View
@@ -343,8 +390,8 @@ const Main = () => {
                 />
             </Drawer.Navigator>
         </View>
-    )
-}
+    );
+};
 
 const styles = StyleSheet.create({
     drawerHeader: {
@@ -370,6 +417,6 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 24,
     },
-})
+});
 
-export default Main
+export default Main;
