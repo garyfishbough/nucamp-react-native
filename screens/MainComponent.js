@@ -227,7 +227,7 @@ const Main = () => {
         dispatch(fetchComments());
     }, [dispatch]);
 
-    useEffect(() => {
+    const showNetInfo = async () => {
         NetInfo.fetch().then((connectionInfo) => {
             Platform.OS === "ios"
                 ? Alert.alert("Initial Network Connectivity Type:", connectionInfo.type)
@@ -237,11 +237,15 @@ const Main = () => {
                   );
         });
 
-        const unsubscribeNetInfo = NetInfo.addEventListener((connectionInfo) => {
+        const unsubscribeNetInfo = await NetInfo.addEventListener((connectionInfo) => {
             handleConnectivityChange(connectionInfo);
         });
 
         return unsubscribeNetInfo;
+    };
+
+    useEffect(() => {
+        showNetInfo();
     }, []);
 
     const handleConnectivityChange = (connectionInfo) => {
